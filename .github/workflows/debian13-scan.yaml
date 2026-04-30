@@ -58,6 +58,12 @@ jobs:
                 - $(cat id_rsa.pub)
           ssh_pwauth: false
           disable_root: true
+          package_update: true
+          packages:
+            - openssh-server
+          runcmd:
+            - systemctl enable ssh
+            - systemctl start ssh
           EOF
 
           cloud-localds seed.iso user-data
