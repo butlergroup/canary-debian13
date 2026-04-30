@@ -52,7 +52,7 @@ jobs:
           users:
             - name: clouduser
               sudo: ALL=(ALL) NOPASSWD:ALL
-              groups: wheel
+              groups: sudo
               shell: /bin/bash
               ssh_authorized_keys:
                 - $(cat id_rsa.pub)
