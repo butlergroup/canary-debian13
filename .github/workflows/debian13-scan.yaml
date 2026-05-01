@@ -59,11 +59,6 @@ jobs:
           ssh_pwauth: false
           disable_root: true
           package_update: true
-          packages:
-            - openssh-server
-          runcmd:
-            - systemctl enable ssh
-            - systemctl start ssh
           EOF
 
           cat > meta-data <<EOF
@@ -71,7 +66,7 @@ jobs:
           local-hostname: debian13
           EOF
 
-          cloud-localds seed.iso user-data meta-data
+          cloud-localds genisoimage -output seed.iso -volid cidata -joliet -rock user-data meta-data
 
       - name: Start debian13 VM
         run: |
@@ -87,22 +82,10 @@ jobs:
             -device virtio-net-pci,netdev=net0 \
             -nographic \
             -serial mon:stdio \
+            -append "console=ttyS0 ds=nocloud" \
             > vm.log 2>&1 &
 
           echo $! > vm.pid
-
-      - name: Check if port 2222 is open
-        run: |
-          for i in {1..60}; do
-            if nc -z localhost 2222; then
-              echo "✅ Port 2222 is open"
-              exit 0
-            fi
-            echo "⏳ Port not open yet..."
-            sleep 2
-          done
-          echo "❌ Port 2222 never opened"
-          exit 1
 
       - name: Wait for SSH to be fully ready
         run: |
