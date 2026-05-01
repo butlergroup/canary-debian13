@@ -82,7 +82,7 @@ jobs:
             -device virtio-net-pci,netdev=net0 \
             -nographic \
             -serial mon:stdio \
-            -append "console=ttyS0 ds=nocloud" \
+            -smbios type=1,serial=ds=nocloud \
             > vm.log 2>&1 &
 
           echo $! > vm.pid
