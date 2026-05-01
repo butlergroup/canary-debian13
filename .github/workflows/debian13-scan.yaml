@@ -68,6 +68,20 @@ jobs:
 
           cloud-localds seed.iso user-data meta-data
 
+      - name: Preload Trivy databases (host)
+        run: |
+          mkdir -p trivy-cache
+
+          docker run --rm \
+            -v $PWD/trivy-cache:/root/.cache/trivy \
+            aquasec/trivy:latest \
+            image --download-db-only
+
+          docker run --rm \
+            -v $PWD/trivy-cache:/root/.cache/trivy \
+            aquasec/trivy:latest \
+            image --download-java-db-only
+
       - name: Start debian13 VM
         run: |
           qemu-system-x86_64 \
@@ -80,6 +94,7 @@ jobs:
             -boot c \
             -netdev user,id=net0,hostfwd=tcp::2222-:22 \
             -device virtio-net-pci,netdev=net0 \
+            -virtfs local,path=$PWD/trivy-cache,mount_tag=hostshare,security_model=none,id=hostshare \
             -nographic \
             -serial mon:stdio \
             > vm.log 2>&1 &
@@ -111,9 +126,22 @@ jobs:
         run: |
           ssh -i id_rsa -p 2222 clouduser@localhost <<'EOF'
           set -e
+
+          # Create mount point
+          sudo mkdir -p /mnt/trivy-cache
+
+          # Mount shared folder
+          sudo mount -t 9p -o trans=virtio hostshare /mnt/trivy-cache
+
+          # Install Trivy
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+          # Use external cache directory
           sudo ./bin/trivy rootfs / \
             --scanners vuln,misconfig \
+            --cache-dir /mnt/trivy-cache \
+            --skip-db-update \
+            --skip-java-db-update \
             -f sarif \
             -o /tmp/report.sarif
           EOF
