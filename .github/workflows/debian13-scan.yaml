@@ -66,7 +66,7 @@ jobs:
           local-hostname: debian13
           EOF
 
-          cloud-localds genisoimage -output seed.iso -volid cidata -joliet -rock user-data meta-data
+          cloud-localds genisoimage -output seed.iso -volid cidata user-data meta-data
 
       - name: Start debian13 VM
         run: |
