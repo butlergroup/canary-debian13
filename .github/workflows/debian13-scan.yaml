@@ -91,6 +91,19 @@ jobs:
 
           echo $! > vm.pid
 
+      - name: Check if port 2222 is open
+        run: |
+          for i in {1..60}; do
+            if nc -z localhost 2222; then
+              echo "✅ Port 2222 is open"
+              exit 0
+            fi
+            echo "⏳ Port not open yet..."
+            sleep 2
+          done
+          echo "❌ Port 2222 never opened"
+          exit 1
+
       - name: Wait for SSH to be fully ready
         run: |
           for i in {1..120}; do
